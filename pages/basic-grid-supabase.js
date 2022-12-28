@@ -28,7 +28,7 @@ function App() {
 
   const CheckboxComponentForAccepted = (params) => {
     // console.log("params for", params.data.id, ":", params);
-    console.log("films", films);
+    // console.log("films", films);
     return (
       <div>
         <input
@@ -44,7 +44,7 @@ function App() {
 
   const CheckboxComponentForRejected = (params) => {
     // console.log("params for", params.data.id, ":", params);
-    console.log("films", films);
+    //console.log("films", films);
     return (
       <div>
         <input
@@ -60,7 +60,7 @@ function App() {
 
   const ComponentForWinner = (params) => {
     // console.log("params for", params.data.id, ":", params);
-    console.log("data", params.data);
+    // console.log("data", params.data);
     return <div>{params.data.awards && params.data.awards.length}</div>;
   };
 
@@ -74,37 +74,41 @@ function App() {
     );
   };
 
-  const defaultColumns1 = [
-    { field: "title", checkboxSelection: true },
-    { field: "id" },
-    { field: "accepted", cellRenderer: CheckboxComponentForAccepted },
-    { field: "rejected", cellRenderer: CheckboxComponentForRejected },
-  ];
-
-  const defaultColumns2 = [
-    { field: "title", checkboxSelection: true },
-    { field: "id" },
-  ];
-
-  const titleColumn = { field: "title", checkboxSelection: true };
-  const id = { field: "id", cellRenderer: ComponentForId };
+  const titleColumn = { field: "title", checkboxSelection: true, id: 1 };
+  const idColumn = { field: "id", cellRenderer: ComponentForId, id: 2 };
   const acceptedColumn = {
     field: "accepted",
     cellRenderer: CheckboxComponentForAccepted,
+    id: 3,
   };
   const rejectedColumn = {
     field: "rejected",
     cellRenderer: CheckboxComponentForRejected,
+    id: 4,
   };
-  const awardsColumn = { field: "awards", cellRenderer: ComponentForWinner };
+  const awardsColumn = {
+    field: "awards",
+    cellRenderer: ComponentForWinner,
+    id: 5,
+  };
+
+  useEffect(() => {
+    setDisplayedColumns(sortColumnDefs(columnDefs));
+  }, []);
 
   const [columnDefs, setColumnDefs] = useState([
     titleColumn,
-    id,
+    idColumn,
     acceptedColumn,
     rejectedColumn,
     awardsColumn,
   ]);
+
+  const [displayedColumns, setDisplayedColumns] = useState([]);
+
+  const sortColumnDefs = (columnDefs) => {
+    return columnDefs.sort((a, b) => a.id - b.id);
+  };
 
   //ag-grid settings
 
@@ -129,7 +133,7 @@ function App() {
   });
 
   useEffect(() => {
-    console.log("data:", data);
+    // console.log("data:", data);
     data && setFilms([...data]);
   }, [data]);
 
@@ -164,17 +168,17 @@ function App() {
   }
 
   const handleCheckAccepted = (event) => {
-    console.log(event.target.checked);
-    console.log(event.target.id);
+    // console.log(event.target.checked);
+    // console.log(event.target.id);
     supabase
       .from("films_duplicate")
       .update({ accepted: event.target.checked, rejected: false })
       .eq("id", event.target.id)
       .then((response) => {
-        console.log("response", response);
+        // console.log("response", response);
       })
       .catch((error) => {
-        console.log("error", error);
+        // console.log("error", error);
       })
       .finally(() => {
         refetch();
@@ -182,8 +186,8 @@ function App() {
   };
 
   const handleCheckRejected = (event) => {
-    console.log(event.target.checked);
-    console.log(event.target.id);
+    // console.log(event.target.checked);
+    // console.log(event.target.id);
     supabase
       .from("films_duplicate")
       .update({
@@ -203,18 +207,84 @@ function App() {
   };
 
   const handleShowColumn = (event) => {
-    console.log(event.target.checked);
-    if (event.target.checked) {
-      setColumnDefs([...columnDefs, { field: event.target.name }]);
-    } else {
-      setColumnDefs(
-        columnDefs.filter((column) => column.field !== event.target.name)
-      );
+    switch (event.target.id) {
+      case "id":
+        if (event.target.checked) {
+          console.log("id checked");
+          setDisplayedColumns(sortColumnDefs([...displayedColumns, idColumn]));
+        } else {
+          console.log("id unchecked");
+          setDisplayedColumns(
+            sortColumnDefs([
+              ...displayedColumns.filter((column) => column.field !== "id"),
+            ])
+          );
+        }
+        break;
+      case "accepted":
+        if (event.target.checked) {
+          console.log("accepted checked");
+          setDisplayedColumns(
+            sortColumnDefs([...displayedColumns, acceptedColumn])
+          );
+        } else {
+          console.log("accepted unchecked");
+          setDisplayedColumns(
+            sortColumnDefs([
+              ...displayedColumns.filter(
+                (column) => column.field !== "accepted"
+              ),
+            ])
+          );
+        }
+        break;
+      case "rejected":
+        if (event.target.checked) {
+          console.log("rejected checked");
+          setDisplayedColumns(
+            sortColumnDefs([...displayedColumns, rejectedColumn])
+          );
+        } else {
+          console.log("rejected unchecked");
+          setDisplayedColumns(
+            sortColumnDefs([
+              ...displayedColumns.filter(
+                (column) => column.field !== "rejected"
+              ),
+            ])
+          );
+        }
+        break;
+      case "awards":
+        if (event.target.checked) {
+          console.log("awards checked");
+          setDisplayedColumns(
+            sortColumnDefs([...displayedColumns, awardsColumn])
+          );
+        } else {
+          console.log("rejected unchecked");
+          setDisplayedColumns(
+            sortColumnDefs([
+              ...displayedColumns.filter((column) => column.field !== "awards"),
+            ])
+          );
+        }
+        break;
+      default:
+        console.log("default");
     }
   };
 
+  useEffect(() => {
+    console.log("columnDefs:", columnDefs);
+  }, [columnDefs]);
+
+  useEffect(() => {
+    setColumnDefs([...displayedColumns]);
+  }, [displayedColumns]);
+
   const handleCellClicked = (event) => {
-    console.log("event", event);
+    //console.log("event", event);
     //router.push(`/film/${event.data.id}`);
   };
 
@@ -228,12 +298,36 @@ function App() {
       <div>
         <input
           type="checkbox"
-          id="showIdColumn"
+          id="id"
           name="id"
           onChange={handleShowColumn}
           checked={columnDefs.some((column) => column.field === "id")}
         />
-        <label htmlFor="showIdColumn">Show id column</label>
+        <label htmlFor="id">Show id column</label>
+        <input
+          type="checkbox"
+          id="accepted"
+          name="accepted"
+          onChange={handleShowColumn}
+          checked={columnDefs.some((column) => column.field === "accepted")}
+        />
+        <label htmlFor="accepted">Show accepted column</label>
+        <input
+          type="checkbox"
+          id="rejected"
+          name="rejected"
+          onChange={handleShowColumn}
+          checked={columnDefs.some((column) => column.field === "rejected")}
+        />
+        <label htmlFor="rejected">Show rejected column</label>
+        <input
+          type="checkbox"
+          id="awards"
+          name="awards"
+          onChange={handleShowColumn}
+          checked={columnDefs.some((column) => column.field === "awards")}
+        />
+        <label htmlFor="awards">Show awards column</label>
       </div>
       <div className="ag-theme-alpine" style={{ height: 400 }}>
         <AgGridReact
@@ -242,6 +336,8 @@ function App() {
           defaultColDef={defaultColDef}
           onCellValueChanged={handleCellValueChanged}
           onCellClicked={handleCellClicked}
+          pagination={true}
+          paginationPageSize={4}
         ></AgGridReact>
       </div>
     </div>
