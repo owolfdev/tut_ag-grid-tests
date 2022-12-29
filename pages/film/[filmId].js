@@ -101,7 +101,7 @@ function Event() {
   }
 
   const handleBounce = () => {
-    router.push("/basic-grid-supabase");
+    router.push("/");
   };
   return (
     <div>
